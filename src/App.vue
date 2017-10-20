@@ -8,13 +8,13 @@
       <timer v-on:expired="timesUp"></timer>
 
       <div class="row">
-        <div id="green" class="light col" v-on:click="captureTap('green')"></div>
-        <div id="red" class="light col" v-on:click="captureTap('red')"></div>
+        <div id="green" class="light col" v-on:click="captureTap('green')" v-bind:class="{ 'bright': currentButton === 'green' }"></div>
+        <div id="red" class="light col" v-on:click="captureTap('red')" v-bind:class="{ 'bright': currentButton === 'red' }"></div>
       </div>
 
       <div class="row">
-        <div id="yellow" class="light col" v-on:click="captureTap('yellow')"></div>
-        <div id="blue" class="light col" v-on:click="captureTap('blue')"></div>
+        <div id="yellow" class="light col" v-on:click="captureTap('yellow')" v-bind:class="{ 'bright': currentButton === 'yellow'}"></div>
+        <div id="blue" class="light col" v-on:click="captureTap('blue')" v-bind:class="{ 'bright': currentButton === 'blue'}"></div>
       </div>
 
     </div>
@@ -38,9 +38,11 @@ export default {
   name: 'app',
   data () {
     return {
-      i: 0,
+      playSequenceId: null,
+      playSequenceCounter: 0,
+      currentButton: '',
       timerLength: 10,
-      timerIsActive: false, // For logic in this component
+      state: 'ready',
       longest: 0,
       sequence: [],
       taps: [],
@@ -66,17 +68,12 @@ export default {
   },
   methods: {
 
-    test: function(message) {
-      console.log('something something test test: ' + message);
-    },
-
     start: function() {
       if (this.timerIsActive == false) {
         this.timerIsActive = true;
-        this.sequence = [ 'red', 'blue', 'yellow'];
+        this.sequence = [];
         this.addToSequence();
         this.playSequence();
-        this.$bus.$emit('waiting', this.timerLength)
       }
     },
 
@@ -92,43 +89,29 @@ export default {
 
     playSequence: function() {
 
-      console.log("in playSequence");
+      console.log("App: playSequence: " + this.playSequenceCounter);
 
-//      this.$bus.$emit('playing', this.timerLength);
+      this.$bus.$emit('playing', this.timerLength);
+      this.timerIsActive = false;
 
-      console.log("simon.i is " + simon.i);
+      this.playSequenceId = window.setInterval(function(self) {
 
-      setTimeout(function (i, testFunction) {
-          // Do Something Here
-          // Then recall the parent function to
-          // create a recursive loop.
+        console.log("anonymous function: " + self.playSequenceCounter)
+        self.currentButton = self.sequence[self.playSequenceCounter];
+        self.playSequenceCounter++;
 
-          testFunction('woot!');
+        console.log("anonymous function: (counter)" + self.playSequenceCounter);
+        console.log("anonymous function: (sequence length)" + self.sequence.length);
 
-          console.log( '1(' + i + ') this.sequence[' + i + '](' + this.sequence[i] + ')'  )
-          i++;
-          if ( i < this.sequence.length ) {
-            this.playSequence();
-          }
-          else {
-            console.log( 'FINISHED!' );
-          }
-      }.bind(this, this.i, this.test), 1000);
+        if (self.playSequenceCounter > self.sequence.length) {
+          window.clearInterval(self.playSequenceId);
+          self.playSequenceId = null;
+          self.playSequenceCounter = 0;
+          self.$bus.$emit('waiting', self.timerLength);
+          self.timerIsActive = true;
+        }
 
-
-
-
-
-//      this.$bus.$emit('waiting', this.timerLength);
-
-    },
-
-    playButton: function(light) {
-
-      console.log("Correct sequence: ");
-      for (var i=0; i < this.sequence.length; i++) {
-        console.log(this.sequence[i]);
-      }
+      }, 400, this);
 
     },
 
@@ -153,11 +136,13 @@ export default {
             this.taps = [];
             this.addToSequence();
             this.playSequence();
-            this.$bus.$emit('waiting', this.timerLength)
+            this.$bus.$emit('waiting', this.timerLength);
+            this.timerIsActive = true;
           }
           else {
             // Matches so far
             this.$bus.$emit('waiting', this.timerLength)            
+            this.timerIsActive = true;
           }
 
         }
@@ -173,28 +158,17 @@ export default {
     },
 
     timesUp: function() {
-      alert("Time's up!");
       this.timerIsActive = false;
       this.gameOver();
     },
 
     gameOver: function() {
-
-      alert("GAME OVER, MAN!");
+      this.$bus.$emit('gameover', this.timerLength)            
       this.timerIsActive = false;
       this.taps = [];
       if (this.longest < this.sequence.length) {
         this.longest = this.sequence.length;
       }
-
-      // There is no win condition for Simon
-      // You just try to go as long as you can before you screw up
-
-      // Put application in "gameover" state
-      // Play the gameover sound
-      // Save a new high score, if justified
-      // Start game button should start a new game
-
     }
 
   }
@@ -253,6 +227,7 @@ a {
 .light {
   margin: 20px;
   border: 1px solid #000;
+  transition: 10x 2s;
 }
 
 #red {
@@ -287,6 +262,9 @@ a {
   opacity: 1.0 !important;
 }
 
+.light:active {
+  opacity: 1.0 !important;
+}
 
 
 </style>
