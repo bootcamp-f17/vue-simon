@@ -11,7 +11,7 @@ Object.defineProperties(Vue.prototype, {
   }
 });
 
-var app = new Vue({
+var simon = new Vue({
   el: '#app',
   render: h => h(App)
 });

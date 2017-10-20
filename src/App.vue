@@ -38,6 +38,7 @@ export default {
   name: 'app',
   data () {
     return {
+      i: 0,
       timerLength: 10,
       timerIsActive: false, // For logic in this component
       longest: 0,
@@ -65,10 +66,14 @@ export default {
   },
   methods: {
 
+    test: function(message) {
+      console.log('something something test test: ' + message);
+    },
+
     start: function() {
       if (this.timerIsActive == false) {
         this.timerIsActive = true;
-        this.sequence = [];
+        this.sequence = [ 'red', 'blue', 'yellow'];
         this.addToSequence();
         this.playSequence();
         this.$bus.$emit('waiting', this.timerLength)
@@ -89,13 +94,32 @@ export default {
 
       console.log("in playSequence");
 
-      this.$bus.$emit('playing', this.timerLength);
+//      this.$bus.$emit('playing', this.timerLength);
+
+      console.log("simon.i is " + simon.i);
+
+      setTimeout(function (i, testFunction) {
+          // Do Something Here
+          // Then recall the parent function to
+          // create a recursive loop.
+
+          testFunction('woot!');
+
+          console.log( '1(' + i + ') this.sequence[' + i + '](' + this.sequence[i] + ')'  )
+          i++;
+          if ( i < this.sequence.length ) {
+            this.playSequence();
+          }
+          else {
+            console.log( 'FINISHED!' );
+          }
+      }.bind(this, this.i, this.test), 1000);
 
 
-      // stuff...
 
 
-      this.$bus.$emit('waiting', this.timerLength);
+
+//      this.$bus.$emit('waiting', this.timerLength);
 
     },
 
