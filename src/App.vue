@@ -58,8 +58,7 @@ export default {
     },
     tapsMatchesSequence: function() {
       var partialSequence = this.sequence.slice(0, this.taps.length);
-      console.log(this.taps);
-      console.log(partialSequence);
+      // This only works because we know exactly what taps and sequence contain
       return JSON.stringify(this.taps)==JSON.stringify(partialSequence); 
     }
   },
@@ -136,14 +135,8 @@ export default {
 
         setTimeout(() => {
   
-          // console.log("anonymous function: " + self.playSequenceCounter);
-
           this.currentButton = this.sequence[this.playSequenceCounter];
           this.playSequenceCounter++;
-
-          // console.log("anonymous function (counter): " + self.playSequenceCounter);
-
-          // console.log("anonymous function (sequence length): " + self.sequence.length);
 
           if (this.playSequenceCounter > this.sequence.length) {
             window.clearInterval(this.playSequenceId);
@@ -204,11 +197,6 @@ export default {
       }
 
     },
-
-    // timesUp: function() {
-    //   this.timerIsActive = false;
-    //   this.gameOver();
-    // },
 
     gameOver: function() {
       this.changeState('gameover');
