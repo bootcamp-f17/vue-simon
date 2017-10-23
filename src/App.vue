@@ -1,11 +1,11 @@
 <template>
   <div id="app">
 
-    <h1>Vuemon</h1>
+    <h1>Vueplicate</h1>
 
     <div id="simon">
 
-      <timer v-on:expired="timesUp"></timer>
+      <timer></timer>
 
       <div class="row">
         <div id="green" class="light col" v-on:click="captureTap('green')" v-bind:class="{ 'bright': currentButton === 'green' }"></div>
@@ -38,6 +38,8 @@ export default {
   name: 'app',
   data () {
     return {
+      state: 'ready',
+      timerIsActive: false,
       playSequenceId: null,
       playSequenceCounter: 0,
       currentButton: '',
@@ -63,10 +65,45 @@ export default {
   },
   created () {
     this.$bus.$on('expired', ($event) => {
-      this.timesUp();
+      this.gameOver();
     })
   },
   methods: {
+
+    changeState: function(newState) {
+      switch(newState) {
+        case 'ready': 
+          // Application is waiting for the user to start a new game
+          this.timerIsActive = false;
+          this.$bus.$emit('stateChange', 'ready'); 
+          break;       
+        case 'playing':
+          // Application is currently playing back the sequence
+          this.timerIsActive = false;
+          this.$bus.$emit('stateChange', 'playing');        
+          break;
+        case 'capturing':
+          // Application is capturing taps from the user
+          this.timerIsActive = true;
+          this.$bus.$emit('stateChange', 'capturing', this.timerLength);  
+          break;
+        case 'processing':
+          // Application is processing a tap
+          this.timerIsActive = false;
+          this.$bus.$emit('stateChange', 'processing');
+          break;
+        case 'gameover':
+          // The player (finally) tapped a wrong button
+          this.timerIsActive = false;
+          this.$bus.$emit('stateChange', 'gameover');
+          break;
+        default:
+          console.log("Error! Changing to unrecognized state: " + newState);
+      }
+      this.state = newState;
+      console.log("State changed to: " + newState);
+
+    },
 
     start: function() {
       if (this.timerIsActive == false) {
@@ -89,29 +126,35 @@ export default {
 
     playSequence: function() {
 
-      console.log("App: playSequence: " + this.playSequenceCounter);
+      // console.log("App: playSequence: " + this.playSequenceCounter);
 
-      this.$bus.$emit('playing', this.timerLength);
-      this.timerIsActive = false;
+      this.playSequenceId = window.setInterval(() => {
 
-      this.playSequenceId = window.setInterval(function(self) {
+        this.changeState('playing');
 
-        console.log("anonymous function: " + self.playSequenceCounter)
-        self.currentButton = self.sequence[self.playSequenceCounter];
-        self.playSequenceCounter++;
+        this.currentButton = '';
 
-        console.log("anonymous function: (counter)" + self.playSequenceCounter);
-        console.log("anonymous function: (sequence length)" + self.sequence.length);
+        setTimeout(() => {
+  
+          // console.log("anonymous function: " + self.playSequenceCounter);
 
-        if (self.playSequenceCounter > self.sequence.length) {
-          window.clearInterval(self.playSequenceId);
-          self.playSequenceId = null;
-          self.playSequenceCounter = 0;
-          self.$bus.$emit('waiting', self.timerLength);
-          self.timerIsActive = true;
-        }
+          this.currentButton = this.sequence[this.playSequenceCounter];
+          this.playSequenceCounter++;
 
-      }, 400, this);
+          // console.log("anonymous function (counter): " + self.playSequenceCounter);
+
+          // console.log("anonymous function (sequence length): " + self.sequence.length);
+
+          if (this.playSequenceCounter > this.sequence.length) {
+            window.clearInterval(this.playSequenceId);
+            this.playSequenceId = null;
+            this.playSequenceCounter = 0;
+            this.changeState('capturing');
+          }
+
+        }, 300);
+
+      }, 600);
 
     },
 
@@ -124,7 +167,7 @@ export default {
       if (this.timerIsActive) {
       
         // Put application in "processing" state
-        this.$bus.$emit('processing');
+        this.changeState('processing');
 
         // Add tap to taps
         this.taps.push(light);
@@ -136,15 +179,12 @@ export default {
             this.taps = [];
             this.addToSequence();
             this.playSequence();
-            this.$bus.$emit('waiting', this.timerLength);
-            this.timerIsActive = true;
+            this.changeState('capturing');
           }
           else {
             // Matches so far
-            this.$bus.$emit('waiting', this.timerLength)            
-            this.timerIsActive = true;
+            this.changeState('capturing');
           }
-
         }
         else {
           this.gameOver();
@@ -157,14 +197,13 @@ export default {
 
     },
 
-    timesUp: function() {
-      this.timerIsActive = false;
-      this.gameOver();
-    },
+    // timesUp: function() {
+    //   this.timerIsActive = false;
+    //   this.gameOver();
+    // },
 
     gameOver: function() {
-      this.$bus.$emit('gameover', this.timerLength)            
-      this.timerIsActive = false;
+      this.changeState('gameover');
       this.taps = [];
       if (this.longest < this.sequence.length) {
         this.longest = this.sequence.length;
@@ -226,7 +265,6 @@ a {
 
 .light {
   margin: 20px;
-  border: 1px solid #000;
   transition: 10x 2s;
 }
 
