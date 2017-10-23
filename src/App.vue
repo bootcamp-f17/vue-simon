@@ -8,13 +8,13 @@
       <timer></timer>
 
       <div class="row">
-        <div id="green" class="light col" v-on:click="captureTap('green')" v-bind:class="{ 'bright': currentButton === 'green' }"></div>
-        <div id="red" class="light col" v-on:click="captureTap('red')" v-bind:class="{ 'bright': currentButton === 'red' }"></div>
+        <div id="green" class="light col noSelect" v-on:click="captureTap('green')" v-bind:class="{ 'bright': currentButton === 'green' }"></div>
+        <div id="red" class="light col noSelect" v-on:click="captureTap('red')" v-bind:class="{ 'bright': currentButton === 'red' }"></div>
       </div>
 
       <div class="row">
-        <div id="yellow" class="light col" v-on:click="captureTap('yellow')" v-bind:class="{ 'bright': currentButton === 'yellow'}"></div>
-        <div id="blue" class="light col" v-on:click="captureTap('blue')" v-bind:class="{ 'bright': currentButton === 'blue'}"></div>
+        <div id="yellow" class="light col noSelect" v-on:click="captureTap('yellow')" v-bind:class="{ 'bright': currentButton === 'yellow'}"></div>
+        <div id="blue" class="light col noSelect" v-on:click="captureTap('blue')" v-bind:class="{ 'bright': currentButton === 'blue'}"></div>
       </div>
 
     </div>
@@ -165,6 +165,14 @@ export default {
       // Ignore taps unless the application is waiting
       // The application is waiting when the timer is active
       if (this.timerIsActive) {
+
+        // Display the tap
+        this.currentButton = light;
+
+        // Turn off the light
+        setTimeout(() => {
+          this.currentButton = '';
+        }, 300); 
       
         // Put application in "processing" state
         this.changeState('processing');
@@ -300,9 +308,14 @@ a {
   opacity: 1.0 !important;
 }
 
-.light:active {
-  opacity: 1.0 !important;
+/* https://stackoverflow.com/questions/21003535/anyway-to-prevent-the-blue-highlighting-of-elements-in-chrome-when-clicking-quic */
+.noSelect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
-
 
 </style>
