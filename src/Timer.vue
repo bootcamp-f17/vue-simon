@@ -10,7 +10,7 @@ export default {
   data () {
     return {
       message: 'Click the Start button to begin!',
-      remaining: '',
+      remaining: 0,
       intervalId: null
     }
   },
